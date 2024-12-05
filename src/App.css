@@ -3,3 +3,7 @@
 body {
   font-family: "Montserrat", serif;
 }
+
+.bg_shadow {
+  background-color: rgba(0,0,0,0.7);
+}
