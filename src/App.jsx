@@ -4,6 +4,7 @@ import { IoMdRefresh } from "react-icons/io";
 import Alert from './assets/images/alert.png';
 import solved from './assets/images/solved.png';
 import { CgSpinner } from "react-icons/cg";
+import L from 'leaflet';
 function App() {
 
   const [data, setData] = useState([]);
@@ -11,6 +12,11 @@ function App() {
   const [updateLoading, setUpdateLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedAlert, setSelectedAlert] = useState(null);
+  const [mapModal, setMapModal] = useState(false);
+  const [latitude, setLatitude] = useState(null);
+  const [longitude, setLongitude] = useState(null);
+
+  const [mapLocation, setMapLocation] = useState(null);
 
   const fetchData = async () => {
     setLoading(true);
@@ -71,9 +77,55 @@ function App() {
     setSelectedAlert(null);
   }
 
+  useEffect(() => {
 
-  console.log(selectedAlert);
+    if (latitude && longitude) {
+      
+      // Initialize the map
+      const map = L.map("map").setView([0, 0], 2);
+
+      // Add base map layer
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      }).addTo(map);
+
+      // Add a draggable marker
+      const marker = L.marker([0, 0], { draggable: true }).addTo(map);
+
+      // Set map view and marker position
+      const userLatLng = [latitude, longitude];
+      map.setView(userLatLng, 13);
+      marker.setLatLng(userLatLng);
+
+      // Fetch address details using OpenStreetMap Nominatim API
+      fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
+      )
+      .then((response) => response.json())
+      .then((data) => {
+        const address = data.address;
+        setMapLocation(address);
+      })
+      .catch((error) => console.error("Error fetching address details:", error));
+
+      return () => {
+        map.remove();
+      };
+    }
+    
+  }, [latitude, longitude]);
+
+  const handleMapModal = (lat, lon) => {
+    setMapModal(true);
+    setLatitude(lat);
+    setLongitude(lon);
+  }
   
+  const closeMapModal = () => {
+    setMapModal(false);
+    setLatitude(null);
+    setLongitude(null);
+  }
 
 
   return (
@@ -105,6 +157,7 @@ function App() {
                   <div className='flex items-center gap-3 mt-5'>
                     <button 
                       className='w-full bg-white text-black font-medium border border-gray-200 px-2 py-2 text-sm rounded'
+                      onClick={() => handleMapModal(item.Latitude, item.Longitude)}
                     >
                       Location Open in Maps
                     </button>            
@@ -134,7 +187,6 @@ function App() {
             <div className="flex items-center justify-center mt-12">
                 <div className="relative p-4 w-full max-w-2xl max-h-full">
                     <div className="relative bg-white rounded shadow">
-                        
                         <div className='p-4'>
                           <div className='mb-3'>
                             {
@@ -157,6 +209,42 @@ function App() {
                           </button>
                           <button type="button" onClick={closeModal} className="py-2.5 px-5 ms-3 text-sm font-medium text-gray-900 bg-white rounded border border-gray-200 hover:bg-gray-100 hover:text-blue-700">Cancle</button>
                         </div>
+                    </div>
+                </div>
+            </div>
+          </div>
+        )
+      }
+      
+      {
+        mapModal && (
+          <div className='absolute top-0 left-0 w-full h-[100vh] bg_shadow'>
+            <div className="flex items-center justify-center mt-12">
+                <div className="relative p-4 w-full max-w-2xl max-h-full">
+                    <div className="relative bg-white rounded shadow">
+
+                      <div className="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
+                          <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                            Map
+                          </h3>
+                      </div>
+                     
+                      <div id="map" style={{ height: "200px", width: "100%" }}></div>
+
+                      <div className='mt-2 p-4'>
+                        {
+                          mapLocation && (
+                          <div>
+                            <div className='font-bold mb-1'>Location Details:</div>
+                            {mapLocation?.city && <div className='font-medium'><span className='font-semibold'>City: </span> {mapLocation?.city}</div>}
+                            {mapLocation?.city && <div className='font-medium'><span className='font-semibold'>Postcode: </span> {mapLocation?.postcode}</div>}
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center justify-end p-2 border-t border-gray-200 rounded-b">
+                        <button type="button" onClick={closeMapModal} className="py-2.5 px-5 ms-3 text-sm font-medium text-gray-900 bg-white rounded border border-gray-200 hover:bg-gray-100 hover:text-blue-700">Close</button>
+                      </div>
                     </div>
                 </div>
             </div>
