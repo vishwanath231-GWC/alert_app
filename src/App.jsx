@@ -207,7 +207,7 @@ function App() {
                             {updateLoading && <CgSpinner className='animate-spin mr-2' />}
                             Approved
                           </button>
-                          <button type="button" onClick={closeModal} className="py-2.5 px-5 ms-3 text-sm font-medium text-gray-900 bg-white rounded border border-gray-200 hover:bg-gray-100 hover:text-blue-700">Cancle</button>
+                          <button type="button" onClick={closeModal} className="py-2.5 px-5 ms-3 text-sm font-medium text-gray-900 bg-white rounded border border-gray-200 hover:bg-gray-100 hover:text-blue-700">Cancel</button>
                         </div>
                     </div>
                 </div>
